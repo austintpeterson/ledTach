@@ -154,7 +154,10 @@ void setTach(int rpm){
 }
 
 
-
+//write cool animations for standby/showoff
+void loiter(){
+  return;
+}
 
 
 
