@@ -1,6 +1,16 @@
 /*
 written for arduino uno:
-learn to write for nano, get nano connector and firmware
+note to self: learn to write for nano, get nano connector and firmware
+
+╔═╗╔═╗╦ ╦
+╠═╣╚═╗║ ║
+╩ ╩╚═╝╚═╝
+╔═╗╔═╗╔═╗
+╚═╗╠═╣║╣ 
+╚═╝╩ ╩╚═╝
+= 20-17 =
+=  ATP  =
+                          
 */
 
 //fastLED library
@@ -29,12 +39,14 @@ void setup() {
   FastLED.addLeds<LED_TYPE, LED_DATA_PIN, COLOR_ORDER>(tachometer, NUM_LEDS);
 
   //connect with machine (not being used currently)
+  //THIS DONT WORK.  CREATE SERIAL THAT WORKS DUMMY
   Serial.begin(9600);
   Serial.print("setup complete");
 
   //construct/set up rpm reader/parser stuff HERE:
+  //http://pe-ltd.com/assets/pe3-series-manual.pdf page 25
   
-  //put any boot-up animation you want here
+  //put any boot-up animation you want in this function
   bootAnimation();
 }
 
@@ -131,6 +143,11 @@ void setTach(int rpm){
     //eigth LED on
     tachometer[7] = CRGB::Red;
     //no need for setClear because this is last LED
+    
+    //set flashFlag back to 0 when rpm drops back under limit
+    //this way, when it re-enters flashing threshold, it starts with
+    //the high brightness section of the flash function
+    flashFlag = 0;
   }else{
     FastLED.show();
     return;
@@ -139,11 +156,7 @@ void setTach(int rpm){
   if(rpm > BEGINNING_RPM+INCR_AMT*8){
     
     //flash if greater than 14k (current setting)
-    //could create loop to flash if
-    //CALL FLASH FUNCTION HERE, protothread/scheduler so flash (and its pause) can occur while
-    //other parts of the code function, this means update will also exist within flash function
-    //http://arduino.stackexchange.com/questions/286/how-can-i-create-multiple-running-threads
-
+    //self-updating the flashFlag each cycle
     flashFlag = flash(flashFlag);
 
   }else{
@@ -152,6 +165,7 @@ void setTach(int rpm){
     return;
   }
 }
+
 
 
 //write cool animations for standby/showoff
@@ -163,12 +177,37 @@ void loiter(){
 
 
 void bootAnimation(){
-  //write something cool later
+  //write something cooler later
+  //current boot animation bounces LED once
+  
+  for(int i = 0; current < NUM_LEDS; i++) {
+    //set current LED red
+    tachometer[i] = CRGB::Red;
+    FastLED.show();
+    //clear lit LED for the next time around
+    //will not happen till next loop (no show)
+    tachometer[i] = CRGB::Black;
+    delay(50);
+  }
+  //back the other way
+  for(int i = 0; current < NUM_LEDS; i++) {
+    tachometer[NUM_LEDS-current] = CRGB::Red;
+    FastLED.show();
+    //same deal
+    tachometer[NUM_LEDS-current] = CRGB::Black;
+    delay(50);
+  }
+  
   return;
 }
 
+
+
 //returns int bc call by value C++ bullshit
 //flashflag should have a range of 0-3
+//this is written as a fragmented function that runs the flash cycle in
+//multiple calls so that once the rpm drops under the threshold, the flash function (with pauses)
+//will shut off as soon as possible
 int flash(int flashflag){
   if(flashflag == 0){
     //on full
@@ -193,7 +232,7 @@ int flash(int flashflag){
     return 3;
   }else if(flashflag == 3){
     //on mid
-    setAll();//PASS BRIGHTNESS
+    setAll();
     FastLED.show(lowBrightness);
     //maybe move later
     delay(50);
@@ -201,7 +240,7 @@ int flash(int flashflag){
   }else{
     //dude you broke it
   }
-  //returh flashflag
+  //returh flashflag, set new next time around
 }
 
 //this clears all the leds that exist after the first if statement
@@ -213,23 +252,13 @@ void setClear(int cur){
   }
 }
 
-//pass in color, set all in tach that color
+//set all red (flash function)
 void setAll(){
   for(int i = 0; i < NUM_LEDS; i++){
     tachometer[i] = CRGB::Red;
   }
 }
-/*
-//not currently used
-//quick function to clear whole tach
-//might use in flash
-void clearFull(){
-  for(int current = 0; current < NUM_LEDS; current++) {
-    tachometer[current] = CRGB::Black;
-    FastLED.show();
-  }
-}
-*/
+
 
 
 
