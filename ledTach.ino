@@ -51,9 +51,11 @@ void setup() {
 }
 
 //initialize variables (Build real rpm parser later)
+//make real rpm a uint8_t
 int rpm = 5001;
 
 //global flash flag, outside loop bc needs updating
+//make uint8_t
 int flashFlag = 0;
 
 void loop() {
@@ -143,11 +145,6 @@ void setTach(int rpm){
     //eigth LED on
     tachometer[7] = CRGB::Red;
     //no need for setClear because this is last LED
-    
-    //set flashFlag back to 0 when rpm drops back under limit
-    //this way, when it re-enters flashing threshold, it starts with
-    //the high brightness section of the flash function
-    flashFlag = 0;
   }else{
     FastLED.show();
     return;
@@ -180,21 +177,21 @@ void bootAnimation(){
   //write something cooler later
   //current boot animation bounces LED once
   
-  for(int i = 0; current < NUM_LEDS; i++) {
+  for(int i = 0; i < NUM_LEDS; i++) {
     //set current LED red
     tachometer[i] = CRGB::Red;
     FastLED.show();
     //clear lit LED for the next time around
     //will not happen till next loop (no show)
-    tachometer[i] = CRGB::Black;
+    tachometer[i] = CRGB::Green;
     delay(50);
   }
   //back the other way
-  for(int i = 0; current < NUM_LEDS; i++) {
-    tachometer[NUM_LEDS-current] = CRGB::Red;
+  for(int i = 0; i < NUM_LEDS; i++) {
+    tachometer[NUM_LEDS-i] = CRGB::Red;
     FastLED.show();
     //same deal
-    tachometer[NUM_LEDS-current] = CRGB::Black;
+    tachometer[NUM_LEDS-i] = CRGB::Black;
     delay(50);
   }
   
